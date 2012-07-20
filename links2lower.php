@@ -54,91 +54,91 @@
  */
 function recursively_fix_urls($dir)
 {
-	static $new_files;
-	static $orig_target_dir;
-	$path_from_target = '';
-	$file_ext;
+    static $new_files;
+    static $orig_target_dir;
+    $path_from_target = '';
+    $file_ext;
     $perms = false;
-	$dh = opendir($dir);
+    $dh = opendir($dir);
 
-	if (is_null($orig_target_dir))
-	{
-		// First run, this is the original target directory
-		$orig_target_dir = $dir;
-	}
-	else
-	{
-		// We need to find the path from the target to here
-		$path_from_target = substr($dir, strlen($orig_target_dir) - 1);
-	}
+    if (is_null($orig_target_dir))
+    {
+        // First run, this is the original target directory
+        $orig_target_dir = $dir;
+    }
+    else
+    {
+        // We need to find the path from the target to here
+        $path_from_target = substr($dir, strlen($orig_target_dir) - 1);
+    }
 
-	if (is_null($new_files))
-	{
-		// List of renamed files
-		$new_files = array();
-	}
-	
-	while (false !== ($file = readdir($dh)))
-	{
-		if ($file !== '.' && $file !== '..')
-		{
-			if (is_dir($dir.'/'.$file))
-			{
-				// Check we can write to it
-				if (!is_writable($dir.'/'.$file) && !($perms = make_writeable($dir.'/'.$file)))
-				{
-					// Can't, let's start exiting
-					return false;
-				}
+    if (is_null($new_files))
+    {
+        // List of renamed files
+        $new_files = array();
+    }
+    
+    while (false !== ($file = readdir($dh)))
+    {
+        if ($file !== '.' && $file !== '..')
+        {
+            if (is_dir($dir.'/'.$file))
+            {
+                // Check we can write to it
+                if (!is_writable($dir.'/'.$file) && !($perms = make_writeable($dir.'/'.$file)))
+                {
+                    // Can't, let's start exiting
+                    return false;
+                }
 
-				// It's a directory, let's do everything inside it first
-				if (!recursively_fix_urls($dir.'/'.$file))
-				{
+                // It's a directory, let's do everything inside it first
+                if (!recursively_fix_urls($dir.'/'.$file))
+                {
                     // Something wasn't writeable, continue exiting
                     if ($perms)
                     {
                         chmod($dir.'/'.$file, $perms);
                     }
-					return false;
-				}
-				// Done with the files within, let's rename this directory
-				$new_path = $orig_target_dir.$path_from_target;
-				$new_path .= '/'.strtolower($file);
+                    return false;
+                }
+                // Done with the files within, let's rename this directory
+                $new_path = $orig_target_dir.$path_from_target;
+                $new_path .= '/'.strtolower($file);
                 rename($dir.'/'.$file, $new_path);
                 if ($perms)
                 {
                     chmod($new_path, $perms);
                 }
-				// Ensure we know this has been renamed
-				$new_files[] = $new_path;
-			}
-			else if (in_array($file, $new_files))
-			{
-				// This is a file we just renamed
-				continue;
-			}
-			else
-			{
-				$new_file = strtolower($file);
-				// Ensure we know this will have been renamed
-				$new_files[] = $dir.'/'.$new_file;
-				// Rename file
-				rename($dir.'/'.$file, $dir.'/'.$new_file);
-				// If it's an HTML file...
-				$file_ext = pathinfo($new_file, PATHINFO_EXTENSION);
-				if ($file_ext === 'htm' || $file_ext === 'html')
-				{
-					// ... fix it's URL's
-					if(!url_replace($dir.'/'.$new_file))
-					{
-						// An HTML file wasn't writeable, start exiting script
-						return false;
-					}
-				}
-			}
-		}
-	}
-	return true;
+                // Ensure we know this has been renamed
+                $new_files[] = $new_path;
+            }
+            else if (in_array($file, $new_files))
+            {
+                // This is a file we just renamed
+                continue;
+            }
+            else
+            {
+                $new_file = strtolower($file);
+                // Ensure we know this will have been renamed
+                $new_files[] = $dir.'/'.$new_file;
+                // Rename file
+                rename($dir.'/'.$file, $dir.'/'.$new_file);
+                // If it's an HTML file...
+                $file_ext = pathinfo($new_file, PATHINFO_EXTENSION);
+                if ($file_ext === 'htm' || $file_ext === 'html')
+                {
+                    // ... fix it's URL's
+                    if(!url_replace($dir.'/'.$new_file))
+                    {
+                        // An HTML file wasn't writeable, start exiting script
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    return true;
 }
 
 /**
@@ -150,28 +150,28 @@ function url_replace($file)
 {
     $perms = false;
 
-	// Don't think I've forgot any URL attributes...!
-	$pattern = '/ (href|src|action|cite|archive|codebase';
-	$pattern .= '|code|data|ismap|usemap|longdesc)="(.*?)"/ie';
-	$replace = "' \\1=\"'.strtolower('\\2').'\"'";
-	
-	// If it's not writeable, try to make it writeable
-	if (is_writeable($file) || ($perms = make_writeable($file)))
-	{
-		$contents = file_get_contents($file);
-		$contents = preg_replace($pattern, $replace, $contents);
+    // Don't think I've forgot any URL attributes...!
+    $pattern = '/ (href|src|action|cite|archive|codebase';
+    $pattern .= '|code|data|ismap|usemap|longdesc)="(.*?)"/ie';
+    $replace = "' \\1=\"'.strtolower('\\2').'\"'";
+    
+    // If it's not writeable, try to make it writeable
+    if (is_writeable($file) || ($perms = make_writeable($file)))
+    {
+        $contents = file_get_contents($file);
+        $contents = preg_replace($pattern, $replace, $contents);
         file_put_contents($file, $contents);
         if ($perms)
         {
             chmod($file, $perms);
         }
-		return true;
-	}
-	else
-	{
-		// Not writeable
-		return false;
-	}
+        return true;
+    }
+    else
+    {
+        // Not writeable
+        return false;
+    }
 }
 
 /**
@@ -185,16 +185,16 @@ function make_writeable($path)
     // Get its permissions
     $perms = fileperms($path);
 
-	if (!chmod($path, is_dir($path) ? 0755 : 0644))
-	{
-		// The file/dir is owned by someone else and isn't writeable
-		echo "Error: $file is owned by someone else and it isn't writeable!\n";
-		echo "I can't change that, please make it writeable and try again.\n";
-		echo "Exiting.\n\n";
-		return false;
+    if (!chmod($path, is_dir($path) ? 0755 : 0644))
+    {
+        // The file/dir is owned by someone else and isn't writeable
+        echo "Error: $file is owned by someone else and it isn't writeable!\n";
+        echo "I can't change that, please make it writeable and try again.\n";
+        echo "Exiting.\n\n";
+        return false;
     }
 
-	return $perms; // It's writeable
+    return $perms; // It's writeable
 }
 
 // There's an argument and it's a valid folder
@@ -204,46 +204,46 @@ if ($_SERVER['argc'] == 2 && is_dir($_SERVER['argv'][1]))
     $target_perms = false;
     $return_value;
 
-	// Check we can write to it
-	if (!is_writable($target_dir) && !($target_perms = make_writeable($target_dir)))
-	{
-		echo "Please check the permissions of $target_dir\n\n";
-		return 1; // Error
-	}
+    // Check we can write to it
+    if (!is_writable($target_dir) && !($target_perms = make_writeable($target_dir)))
+    {
+        echo "Please check the permissions of $target_dir\n\n";
+        return 1; // Error
+    }
 
-	echo "\nLinks2Lower\n";
-	echo "This script will recursively convert all file and folder\n";
-	echo "names in the given directory to their lowercase equivalent,\n";
-	echo "and correct all URLs within any HTML files to match.\n\n";
-	echo "Make sure you have a backup of this directory before proceeding.\n\n";
-	echo "Perform these actions on all files and folders within\n";
-	echo "$target_dir? [y/n]: "; // Prompt
+    echo "\nLinks2Lower\n";
+    echo "This script will recursively convert all file and folder\n";
+    echo "names in the given directory to their lowercase equivalent,\n";
+    echo "and correct all URLs within any HTML files to match.\n\n";
+    echo "Make sure you have a backup of this directory before proceeding.\n\n";
+    echo "Perform these actions on all files and folders within\n";
+    echo "$target_dir? [y/n]: "; // Prompt
 
-	if (fscanf(STDIN, "%s", $confirm_input) == 1)
-	{
-		// If that's a yes...
-		if (strtolower($confirm_input) == 'y')
-		{
-			// Drum roll please...
-			echo "\nProcessing...\n";
-			clearstatcache();
-			// ... here we go!
-			if (recursively_fix_urls($target_dir))
-            {
-				echo "Woohoo! All done. Bye!\n\n";
-				$return_value = 0; // Success!
-			}
-			else
-            {
-				// Should already be error message
-				$return_value = 1; // Error
-			}
-		}
-		elseif (strtolower($confirm_input) == 'n') // No
+    if (fscanf(STDIN, "%s", $confirm_input) == 1)
+    {
+        // If that's a yes...
+        if (strtolower($confirm_input) == 'y')
         {
-			echo "Ok, bye!\n\n";
-			$return_value = 0; // Exit
-		}
+            // Drum roll please...
+            echo "\nProcessing...\n";
+            clearstatcache();
+            // ... here we go!
+            if (recursively_fix_urls($target_dir))
+            {
+                echo "Woohoo! All done. Bye!\n\n";
+                $return_value = 0; // Success!
+            }
+            else
+            {
+                // Should already be error message
+                $return_value = 1; // Error
+            }
+        }
+        elseif (strtolower($confirm_input) == 'n') // No
+        {
+            echo "Ok, bye!\n\n";
+            $return_value = 0; // Exit
+        }
     }
     else
     {
@@ -260,9 +260,9 @@ if ($_SERVER['argc'] == 2 && is_dir($_SERVER['argv'][1]))
 }
 else
 {
-	// Didn't provide directory name as argument
-	echo "\nUsage: php links2lower.php /path/to/docs/directory\n\n";
-	return 1; // error
+    // Didn't provide directory name as argument
+    echo "\nUsage: php links2lower.php /path/to/docs/directory\n\n";
+    return 1; // error
 }
 
 ?>
