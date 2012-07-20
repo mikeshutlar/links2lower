@@ -15,7 +15,7 @@ This is useful for HTML documentation (or sites) created in Windows where there 
 Call the script and provide the path to the directory of the HTML documentation to work on.
 
 E.g.
-php links2lower.php /home/anuser/docs/
+php links2lower.php /home/someuser/docs/
 
 
 ## Contribute
@@ -28,7 +28,7 @@ Something incorrect or missing, or got an improvement?
 
 ## License
 
-Copyright (c) 2008-2010, Mike Shutlar
+Copyright (c) 2008-2012, Mike Shutlar
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
