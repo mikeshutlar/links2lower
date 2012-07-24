@@ -188,7 +188,9 @@ function make_writeable($path)
     if (!chmod($path, is_dir($path) ? 0755 : 0644))
     {
         // The file/dir is owned by someone else and isn't writeable
-        echo "Error: $file is owned by someone else and it isn't writeable!\n";
+        echo "Error:\n";
+        echo "$path\n";
+        echo "is owned by someone else and it isn't writeable!\n";
         echo "I can't change that, please make it writeable and try again.\n";
         echo "Exiting.\n\n";
         return false;
